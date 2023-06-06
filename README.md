@@ -1,3 +1,7 @@
+<center>
+    <img src="https://i.imgur.com/dRjzcCY.png" alt="Brittle Logo" style="max-width: 867px; min-width: 200px; width: 50%;">
+</center>
+
 # Brittle
 
 Brittle is a JavaScript library that allows you to generate documents from templates. Similar to ejs, Brittle enables you to dynamically insert content into your templates using JavaScript code.
