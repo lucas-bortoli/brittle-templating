@@ -3,120 +3,120 @@
 // Copyright (c) 2023 Lucas Bortoli. All Rights Reserved.
 
 interface TextToken {
-    type: "text";
-    content: string;
+  type: "text";
+  content: string;
 }
 
 interface CodeToken {
-    type: "script";
-    writesOutput: boolean;
-    expression: string;
+  type: "script";
+  writesOutput: boolean;
+  expression: string;
 }
 
 type Token = TextToken | CodeToken;
 
 /**
- * Converts the 
- * @param source 
- * @returns 
+ * Converts the
+ * @param source
+ * @returns
  */
 const tokenize = (source: string) => {
-	/**
-	 * Match the following expressions:
-	 *
-	 * [`js code`]
-	 * [=`js code inline`]
-	 */
-	const EXPR_MATCH = /(?<!\\)\[(?<mode>=)?`(?<expression>.*?)`\]/gms  ;
+  /**
+   * Match the following expressions:
+   *
+   * [`js code`]
+   * [=`js code inline`]
+   */
+  const EXPR_MATCH = /(?<!\\)\[(?<mode>=)?`(?<expression>.*?)`\]/gms;
 
-	var matches = source.matchAll(EXPR_MATCH);
+  const matches = source.matchAll(EXPR_MATCH);
 
-	let text_node_start = 0;
+  let text_node_start = 0;
 
-	const nodes: Token[] = [];
+  const nodes: Token[] = [];
 
-	const push_text_node = (start: number, end: number) => {
-        const content = source.substring(start, end);
+  const push_text_node = (start: number, end: number) => {
+    const content = source.substring(start, end);
 
-        // Collapse linebreaks
-        // This behavior may be undesired. Maybe add a switch parameter?
-        if (content.trim().length < 1) return;
+    // Collapse linebreaks
+    // This behavior may be undesired. Maybe add a switch parameter?
+    if (content.trim().length < 1) return;
 
-		nodes.push({
-			type: "text",
-			content: content,
-		});
-	};
+    nodes.push({
+      type: "text",
+      content: content,
+    });
+  };
 
-	for (const match of matches) {
-		const expressionLength = match[0].length;
-		const text_node_end = match.index!;
+  for (const match of matches) {
+    const expressionLength = match[0].length;
+    const text_node_end = match.index!;
 
-		push_text_node(text_node_start, text_node_end);
+    push_text_node(text_node_start, text_node_end);
 
-		if (match.groups!.mode === "=") {
-			nodes.push({
-				type: "script",
-                writesOutput: true,
-				expression: match.groups!.expression,
-			});
-		} else {
-			nodes.push({
-				type: "script",
-                writesOutput: false,
-				expression: match.groups!.expression,
-			});
-		}
+    if (match.groups!.mode === "=") {
+      nodes.push({
+        type: "script",
+        writesOutput: true,
+        expression: match.groups!.expression,
+      });
+    } else {
+      nodes.push({
+        type: "script",
+        writesOutput: false,
+        expression: match.groups!.expression,
+      });
+    }
 
-		text_node_start = text_node_end + expressionLength;
-	}
+    text_node_start = text_node_end + expressionLength;
+  }
 
-	// Push remaining text node (text until EOF)
-	push_text_node(text_node_start, source.length);
+  // Push remaining text node (text until EOF)
+  push_text_node(text_node_start, source.length);
 
-	return nodes;
+  return nodes;
 };
 
 /**
  * Compiles the given token list into a stringified function.
  */
 const compile = (nodes: Token[]): string => {
-	const functionBody = [
-        "(function() {",
+  const functionBody = [
+    "(function() {",
 
-        // This variable holds the resulting document after evaluation.
-        "  let documentText = '';",
-        "  ",
-        "  try {",
-    ];
+    // This variable holds the resulting document after evaluation.
+    "  let documentText = '';",
+    "  ",
+    "  try {",
+  ];
 
-	for (const node of nodes) {
-		if (node.type === "text") {
-            // Escape backticks in the generated string
-			const escapedBackticks = node.content.replace(/`/g, "\\`");
+  for (const node of nodes) {
+    if (node.type === "text") {
+      // Escape backticks in the generated string
+      const escapedBackticks = node.content.replace(/`/g, "\\`");
 
-			functionBody.push("  documentText += `" + escapedBackticks + "`;");
-		} else if (node.type === "script") {
-            if (node.writesOutput) {
-                functionBody.push("  documentText += '' + (" + node.expression + ");");
-            } else {
-                functionBody.push("  " + node.expression);
-            }
-		}
-	}
+      functionBody.push("  documentText += `" + escapedBackticks + "`;");
+    } else if (node.type === "script") {
+      if (node.writesOutput) {
+        functionBody.push("  documentText += '' + (" + node.expression + ");");
+      } else {
+        functionBody.push("  " + node.expression);
+      }
+    }
+  }
 
-    // Error handling could be improved...
-	functionBody.push(
-		"  } catch (embeddedError) {",
-		"    console.error(embeddedError);",
-		"    throw embeddedError;",
-		"  }",
-        "  ",
-        "  return documentText;",
-        "});"
-	);
+  // Error handling could be improved...
+  functionBody.push(
+    "  } catch (embeddedError) {",
+    "    console.error(embeddedError);",
+    "    throw embeddedError;",
+    "  }",
+    "  ",
+    "  return documentText;",
+    "});"
+  );
 
-	return functionBody.join("\n");
+  return functionBody.join("\n");
 };
 
 /**
@@ -126,22 +126,22 @@ const compile = (nodes: Token[]): string => {
  * Throws if the given template has a JS syntax error.
  */
 const run = (function_text: string): string => {
-	let results = eval(function_text)();
+  let results = eval(function_text)();
 
-	return results;
+  return results;
 };
 
 /**
  * A shorthand function that tokenizes the given template, compiles and runs it.
- * 
+ *
  * When running the template, eval is used. No attempt of sanitizing the input
  * is made. Do not use it with untrusted documents.
- * 
+ *
  * Throws if the given template has a JS syntax error.
  */
 const runTemplate = (source: string): string => {
-	return run(compile(tokenize(source)));
-}
+  return run(compile(tokenize(source)));
+};
 
 export { tokenize, compile, run, runTemplate };
 export default runTemplate;
