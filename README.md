@@ -9,7 +9,7 @@ Brittle is a JavaScript library that allows you to generate documents from templ
 You can install Brittle using npm:
 
 ```shell
-npm install brittle
+npm install brittle-templates
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ To use Brittle, you need to import the library and utilize the `runTemplate` fun
 Sample code:
 ```js
 import fs from "fs";
-import runTemplate from "brittle";
+import runTemplate from "brittle-templates";
 
 const source = fs.readFileSync("input.md", "utf-8");
 const output = runTemplate(source);
