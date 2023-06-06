@@ -1,0 +1,29 @@
+{
+  "name": "brittle-templates",
+  "version": "1.0.0",
+  "description": "The Brittle Templating Library",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "prepublish": "tsc",
+    "build": "tsc"
+  },
+  "keywords": [
+    "brittle",
+    "templating",
+    "markdown",
+    "template",
+    "generate",
+    "ssg",
+    "generator",
+    "website",
+    "document"
+  ],
+  "author": "Lucas Vinicius de Bortoli Santos",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.3"
+  }
+}
