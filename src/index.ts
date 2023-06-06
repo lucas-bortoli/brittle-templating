@@ -14,9 +14,11 @@ interface CodeToken {
 type Token = TextToken | CodeToken;
 
 /**
- * Converts the
- * @param source
- * @returns
+ * Converts the source document into a list of tokens.
+ * A token is either text-only or a script fragment.
+ * Script fragments can return a value or not.
+ * @param source Source document
+ * @returns A list of tokens
  */
 const tokenize = (source: string) => {
   /**
