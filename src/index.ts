@@ -1,6 +1,4 @@
 // The Brittle Templating Library
-//
-// Copyright (c) 2023 Lucas Bortoli. All Rights Reserved.
 
 interface TextToken {
   type: "text";
