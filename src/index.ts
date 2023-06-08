@@ -82,7 +82,7 @@ const tokenize = (source: string) => {
  */
 const compile = (nodes: Token[]): string => {
   const functionBody = [
-    "(function() {",
+    "(async function(context) {",
 
     // This variable holds the resulting document after evaluation.
     "  let documentText = '';",
@@ -95,12 +95,14 @@ const compile = (nodes: Token[]): string => {
       // Escape backticks in the generated string
       const escapedBackticks = node.content.replace(/`/g, "\\`");
 
-      functionBody.push("  documentText += `" + escapedBackticks + "`;");
+      functionBody.push("    documentText += `" + escapedBackticks + "`;");
     } else if (node.type === "script") {
       if (node.writesOutput) {
-        functionBody.push("  documentText += '' + (" + node.expression + ");");
+        functionBody.push(
+          "    documentText += '' + await ((function(){ return " + node.expression + "; })() ?? '');"
+        );
       } else {
-        functionBody.push("  " + node.expression);
+        functionBody.push("    " + node.expression);
       }
     }
   }
@@ -125,8 +127,8 @@ const compile = (nodes: Token[]): string => {
  *
  * Throws if the given template has a JS syntax error.
  */
-const run = (function_text: string): string => {
-  let results = eval(function_text)();
+const run = async (function_text: string, context: object): Promise<string> => {
+  let results = await eval(function_text)(context);
 
   return results;
 };
@@ -138,9 +140,13 @@ const run = (function_text: string): string => {
  * is made. Do not use it with untrusted documents.
  *
  * Throws if the given template has a JS syntax error.
+ *
+ * @param source The document text.
+ * @param context An object that is available to the document as the global
+ * `context` variable.
  */
-const runTemplate = (source: string): string => {
-  return run(compile(tokenize(source)));
+const runTemplate = async (source: string, context: object = {}): Promise<string> => {
+  return await run(compile(tokenize(source)), context);
 };
 
 export { tokenize, compile, run, runTemplate };
